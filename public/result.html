@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resume Scan Result</title>
+    <style>
+        /* Add basic styling here */
+    </style>
+</head>
+<body>
+    <h1>Resume Scan Results</h1>
+    <div id="scanResult">
+        <p id="matchRate"></p>
+        <ul id="missingSkills"></ul>
+    </div>
+
+    <h2>Chat with Assistant</h2>
+    <div id="chatbox">
+        <div id="chatMessages"></div>
+        <input type="text" id="userInput" placeholder="Ask about your resume scan...">
+        <button onclick="sendMessage()">Send</button>
+    </div>
+
+    <script>
+        // Utility function to get query parameters
+        function getQueryParam(param) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(param);
+        }
+
+        // Debugging: Log parameters to console
+        console.log('Query Parameters:', window.location.search);
+
+        // Display the match rate and missing skills
+        const matchRate = getQueryParam('matchRate');
+        const missingSkills = JSON.parse(decodeURIComponent(getQueryParam('missingSkills')));
+
+        console.log('Match Rate:', matchRate);
+        console.log('Missing Skills:', missingSkills);
+
+        if (matchRate) {
+            document.getElementById('matchRate').textContent = `Match Rate: ${matchRate}%`;
+        }
+
+        if (missingSkills) {
+            const skillsList = document.getElementById('missingSkills');
+            missingSkills.forEach(skill => {
+                const li = document.createElement('li');
+                li.textContent = skill;
+                skillsList.appendChild(li);
+            });
+        }
+
+        // Chat functionality
+        async function sendMessage() {
+            const userInput = document.getElementById('userInput').value;
+            const chatMessages = document.getElementById('chatMessages');
+
+            // Display user message
+            const userMessage = document.createElement('div');
+            userMessage.textContent = `You: ${userInput}`;
+            chatMessages.appendChild(userMessage);
+
+            // Send the message to the backend for the assistant's response
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ question: userInput })
+                });
+
+                const result = await response.json();
+
+                // Display assistant's response
+                const assistantMessage = document.createElement('div');
+                assistantMessage.textContent = `Assistant: ${result.message}`;
+                chatMessages.appendChild(assistantMessage);
+            } catch (error) {
+                console.error('Error sending message:', error);
+                const assistantMessage = document.createElement('div');
+                assistantMessage.textContent = 'Assistant: Error sending message.';
+                chatMessages.appendChild(assistantMessage);
+            }
+
+            document.getElementById('userInput').value = '';  // Clear input
+        }
+    </script>
+</body>
+</html>

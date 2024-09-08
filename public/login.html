@@ -1,0 +1,191 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+    <title>JobFit AI Login</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+    <!-- Use Google Fonts for Typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/styles.css" />
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js"></script>
+    <style>
+        /* Font and general styles */
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        /* Login Container Styles */
+        .signup-container {
+            max-width: 400px;
+            width: 100%;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .signup-container h2 {
+            margin-bottom: 20px;
+            font-size: 2rem;
+            color: #2c3e50;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #34495e;
+            font-weight: 500;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #bdc3c7;
+            border-radius: 5px;
+        }
+
+        .input-group input:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+
+        .submit-button {
+            background: linear-gradient(90deg, #3498db, #2ecc71);
+            color: white;
+            padding: 12px 25px;
+            border-radius: 50px;
+            border: none;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: block;
+            width: 100%;
+        }
+
+        .submit-button:hover {
+            transform: translateY(-3px);
+            background: linear-gradient(90deg, #2980b9, #27ae60);
+        }
+
+        .link {
+            display: block;
+            margin-top: 20px;
+            font-size: 0.9rem;
+        }
+
+        .link a {
+            color: #3498db;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .link a:hover {
+            text-decoration: underline;
+        }
+
+        .message {
+            margin-top: 20px;
+            font-size: 0.9rem;
+        }
+
+        .message.success {
+            color: #2ecc71;
+        }
+
+        .message.error {
+            color: #e74c3c;
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Section -->
+    <section class="signup-container">
+        <h2>Login</h2>
+        <form id="login-form">
+            <div class="input-group">
+                <label for="email">Login</label>
+                <input type="email" id="email" name="email" required />
+            </div>
+            <div class="input-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required />
+            </div>
+            <button type="submit" class="submit-button">Login</button>
+            <p>Don't have an account? <a href="signup.html">Sign Up</a></p>
+
+        </form>
+        <p id="message" class="message"></p>
+    </section>
+
+    <script type="module">
+        // Import the necessary functions from Firebase SDK
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js';
+        import { getAuth, signInWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js';
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDYTOB5u6xalyQ9NAPSLcJY_mstmrgymvM",
+            authDomain: "jobfit-ai-assistant.firebaseapp.com",
+            projectId: "jobfit-ai-assistant",
+            storageBucket: "jobfit-ai-assistant.appspot.com",
+            messagingSenderId: "475207475538",
+            appId: "1:475207475538:web:64781c951c1f73e64eda8b",
+            measurementId: "G-8GKFMJW9MS"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const messageElement = document.getElementById('message');
+
+            document.getElementById('login-form').addEventListener('submit', function(event) {
+                event.preventDefault();
+
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+
+                signInWithEmailAndPassword(auth, email, password)
+                    .then((userCredential) => {
+                        // Signed in
+                        const user = userCredential.user;
+                        console.log('User signed in:', user);
+                        messageElement.textContent = 'Login successful!';
+                        messageElement.className = 'message success';
+                        window.location.href = 'chatbot.html'; // Redirect to another page
+                    })
+                    .catch((error) => {
+                        const errorCode = error.code;
+                        const errorMessage = error.message;
+                        console.error('Error during sign in:', errorCode, errorMessage);
+
+                        if (errorCode === 'auth/wrong-password') {
+                            messageElement.textContent = 'Incorrect password. Please try again.';
+                            messageElement.className = 'message error';
+                        } else if (errorCode === 'auth/user-not-found') {
+                            messageElement.textContent = 'No account found with this email.';
+                            messageElement.className = 'message error';
+                        } else {
+                            messageElement.textContent = 'Error: ' + errorMessage;
+                            messageElement.className = 'message error';
+                        }
+                    });
+            });
+        });
+    </script>
+</body>
+</html>

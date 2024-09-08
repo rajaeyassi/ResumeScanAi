@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="styles.css"> <!-- Link to your custom CSS file -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"> <!-- FontAwesome for icons -->
+    <title>Chat Page</title>
+    <style>
+        body {
+            font-family: system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+            margin: 0;
+            padding: 0;
+            color: #fff;
+            overflow-x: hidden;
+            background-image: url('chat@.webp'); /* Path to your background image */
+            background-size: cover; /* Cover the entire page */
+            background-position: center; /* Center the background image */
+            background-attachment: fixed; /* Keep the background fixed */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .phone-container {
+            width: 375px; /* Typical phone screen width */
+            height: 667px; /* Typical phone screen height */
+            border: 16px solid #333;
+            border-radius: 36px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background: #1a1a1a; /* Background for the phone screen */
+        }
+        .header {
+            background-color: #1a1a1a;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            border-bottom: 1px solid #444;
+            font-size: 20px;
+        }
+        .content {
+            background-color: rgba(255, 255, 255, 0.1); /* Semi-transparent white background */
+            border-radius: 8px;
+            padding: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.25);
+            height: calc(100% - 100px); /* Adjust height to fit within the phone container */
+            overflow-y: auto;
+        }
+        .input-container {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background-color: #222;
+            border-top: 1px solid #444;
+        }
+        .input-container input,
+        .input-container button {
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #444;
+        }
+        .input-container input {
+            flex: 1;
+            background-color: #333; /* Darker input background */
+            color: #fff;
+        }
+        .input-container button {
+            background-color: #007bff; /* Blue button */
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        .input-container button:hover {
+            background-color: #0056b3;
+        }
+        .upload-form {
+            margin: 10px 0;
+        }
+        .upload-form label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+            color: #ccc; /* Light text color for labels */
+        }
+        .upload-form input[type="file"] {
+            margin-bottom: 10px;
+            color: #fff;
+        }
+        .message {
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            max-width: 80%;
+            word-break: break-word;
+        }
+        .message.user {
+            background-color: #007bff; /* Blue background for user messages */
+            color: #fff;
+            align-self: flex-end;
+        }
+        .message.assistant {
+            background-color: #333; /* Dark background for assistant messages */
+            color: #fff;
+        }
+        .background-canvas {
+            pointer-events: none;
+            background-color: transparent;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -9;
+        }
+        .logout-button {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background-color: #e74c3c; /* Red background */
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            transition: background-color 0.3s;
+        }
+
+        .logout-button:hover {
+            background-color: #c0392b; /* Darker red on hover */
+        }
+
+        .logout-button i {
+            margin-right: 5px; /* Space between icon and text */
+        }
+    </style>
+</head>
+<body>
+    <canvas class="background-canvas" height="0" width="0"></canvas>
+    <a href="Dashboard.html" class="logout-button">
+        <i class="fas fa-sign-out-alt"></i> Logout
+    </a>
+    
+    <div class="phone-container">
+        <div class="header">
+            <i class="fas fa-comment-dots"></i> Chat with Your Assistant
+        </div>
+        <div class="content">
+            <form class="upload-form" id="uploadForm" enctype="multipart/form-data">
+                <label for="resumeFile">Resume (PDF):</label>
+                <input type="file" id="resumeFile" name="resumeFile" accept=".pdf" required>
+
+                <label for="jobDescFile">Job Description (PDF):</label>
+                <input type="file" id="jobDescFile" name="jobDescFile" accept=".pdf" required>
+
+                <button type="submit"><i class="fas fa-upload"></i> Upload</button>
+            </form>
+            <div class="chat-section">
+                <div id="chatbot-messages" class="chat-messages"></div>
+                <div class="input-container">
+                    <input type="text" id="userInput" placeholder="Ask something...">
+                    <button id="sendButton"><i class="fas fa-paper-plane"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+
+            const formData = new FormData();
+            formData.append('resumeFile', document.getElementById('resumeFile').files[0]);
+            formData.append('jobDescFile', document.getElementById('jobDescFile').files[0]);
+
+            try {
+                const response = await fetch('/process', { method: 'POST', body: formData });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                addMessage('assistant', 'Files uploaded and processed. You can now ask questions about the results.');
+
+                // Initialize chat with the result
+                initializeChat(data);
+            } catch (error) {
+                console.error('Error:', error);
+                addMessage('assistant', `Error processing request: ${error.message}`);
+            }
+        });
+
+        function initializeChat(data) {
+            document.getElementById('sendButton').addEventListener('click', async function() {
+                const userInput = document.getElementById('userInput').value;
+                if (userInput.trim()) {
+                    addMessage('user', userInput);
+
+                    try {
+                        const response = await fetch('/chat', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ query: userInput, result: data })
+                        });
+
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! Status: ${response.status}`);
+                        }
+
+                        const responseData = await response.json();
+                        addMessage('assistant', responseData.reply);
+                    } catch (error) {
+                        console.error('Error:', error);
+                        addMessage('assistant', `Error processing request: ${error.message}`);
+                    }
+                    document.getElementById('userInput').value = '';
+                }
+            });
+        }
+
+        function addMessage(role, message) {
+            const messageElement = document.createElement('div');
+            messageElement.className = `message ${role}`;
+            messageElement.innerText = message;
+            document.getElementById('chatbot-messages').appendChild(messageElement);
+            document.getElementById('chatbot-messages').scrollTop = document.getElementById('chatbot-messages').scrollHeight;
+        }
+    </script>
+</body>
+</html>
